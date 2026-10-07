@@ -1,0 +1,3 @@
+ProductEntry.json
+catalog.db
+catalog.db.pre-migrate-<timestamp>.bak

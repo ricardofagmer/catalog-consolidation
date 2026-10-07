@@ -1,0 +1,1 @@
+consolidate --db data/catalog.db --input data/ProductEntry.json

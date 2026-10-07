@@ -1,0 +1,12 @@
+usage: <prog> [-h] COMMAND ...
+
+Consolidate seller product files into the marketplace catalog.
+
+positional arguments:
+  COMMAND
+    migrate      apply pending schema migrations
+    consolidate  consolidate a seller product file
+    review       list or resolve held review queue rows
+
+options:
+  -h, --help     show this help message and exit

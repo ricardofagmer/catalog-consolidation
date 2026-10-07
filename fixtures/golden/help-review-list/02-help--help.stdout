@@ -1,0 +1,9 @@
+usage: <prog> review list [-h] --db PATH [--status PENDING|LINKED|CREATED|REJECTED] [--limit N] [--after-id ID]
+
+options:
+  -h, --help            show this help message and exit
+  --db PATH             path to the SQLite catalog
+  --status PENDING|LINKED|CREATED|REJECTED
+                        queue status to list (default PENDING)
+  --limit N             rows per page, 1..100 (default 20)
+  --after-id ID         return rows with an Id greater than this (from the previous page's next: line)

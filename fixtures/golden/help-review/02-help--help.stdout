@@ -1,0 +1,9 @@
+usage: <prog> review [-h] ACTION ...
+
+positional arguments:
+  ACTION
+    list      list review queue rows, oldest first
+    resolve   resolve one PENDING review row
+
+options:
+  -h, --help  show this help message and exit

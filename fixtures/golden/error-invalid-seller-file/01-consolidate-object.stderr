@@ -1,0 +1,2 @@
+error: invalid input file: not_an_array: data/object.json: top-level value is not a JSON array
+{"timestamp":"<timestamp>","level":"error","service":"catalog_consolidation","event":"consolidate.failed","correlationId":"<id>","errorType":"InvalidInputFileError","durationMs":"<ms>"}

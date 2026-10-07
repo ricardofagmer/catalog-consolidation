@@ -1,0 +1,8 @@
+usage: <prog> consolidate [-h] --db PATH --input PATH [--report PATH] [--dry-run]
+
+options:
+  -h, --help     show this help message and exit
+  --db PATH      path to the SQLite catalog
+  --input PATH   seller JSON file (array of entries)
+  --report PATH  write one JSON line per entry to this path
+  --dry-run      run every decision, then roll back instead of committing

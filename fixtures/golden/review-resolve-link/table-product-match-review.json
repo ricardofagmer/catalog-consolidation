@@ -1,0 +1,2 @@
+[{"Id":1,"SellerName":"FootwearHub","SellerProductId":"a7a7a7a7-b8b8-4c9c-d0d0-e1e1e1e1e1e1","SourceName":"Roteador WiFi 6 TP-Link","SourceBrand":"TP-Link","SourceCategory":"Networking","CandidateProductId":21,"Score":0.90909090909090906,"Reason":"FUZZY","Status":"LINKED"},
+{"Id":2,"SellerName":"SuperMart","SellerProductId":"b4b4b4b4-c5c5-4d6d-e7e7-f8f8f8f8f8f8","SourceName":"Processador AMD Ryzen 9 7950X","SourceBrand":"AMD","SourceCategory":"Components","CandidateProductId":28,"Score":0.9642857142857143,"Reason":"FUZZY","Status":"PENDING"}]

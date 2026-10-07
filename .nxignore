@@ -1,0 +1,10 @@
+# Not project sources: generated output, recorded fixtures, data, process records and docs.
+# Ignored files are neither hashed as task inputs nor scanned for projects.
+out/
+fixtures/
+data/
+.engineos/
+.specs/
+docs/
+.superpowers/
+.claude/

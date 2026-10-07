@@ -1,0 +1,1 @@
+consolidate --db data/missing.db --input data/ProductEntry.json

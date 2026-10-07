@@ -1,0 +1,5 @@
+backup: data/catalog.db.pre-migrate-<timestamp>.bak
+applied 0001 seller_product_text_id
+applied 0002 product_match_keys (backfilled 975 products)
+applied 0003 review_queue
+schema version: 3

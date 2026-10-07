@@ -1,0 +1,1 @@
+{"timestamp":"<timestamp>","level":"info","service":"catalog_consolidation","event":"review.resolve.finished","correlationId":"<id>","durationMs":"<ms>","reviewId":1,"status":"CREATED","productId":977,"linkId":256}

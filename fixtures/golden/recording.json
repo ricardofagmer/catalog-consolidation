@@ -1,0 +1,25 @@
+{
+  "recordedAt": "2026-10-06T17:31:34Z",
+  "cli": ".venv/bin/python -m catalog_consolidation",
+  "python": "Python 3.12.14",
+  "sqlite3": "3.54.0",
+  "dataSha256": [
+    "733ff1d9cc20253da48a9f8b33d7241503e4a06e7c68f65f7fa00ef14466c404  data/catalog.db",
+    "1b0c861fe568c19e8b1cebcf774ee3d1d95baf8c42e35129e4ae806ece04b8f6  data/ProductEntry.json"
+  ],
+  "rebaseline": {
+    "at": "2026-10-06T17:34:36Z",
+    "ruling": ".specs/features/nx-nestjs-modern-ui/ledger.md R-4",
+    "cli": "node apps/cli/dist/main.js",
+    "producedIn": "out/golden-record/ts-rebaseline-20261006T143421",
+    "scenarios": [
+      "error-invalid-seller-file",
+      "help-migrate",
+      "help-consolidate",
+      "help-review-list",
+      "help-review-resolve",
+      "help-never-runs"
+    ],
+    "files": "only the files that differed from the Python recording (help stdout, malformed-JSON stderr)"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@catalog/consolidation",
+  "private": true,
+  "nx": {
+    "name": "consolidation",
+    "projectType": "library",
+    "tags": ["scope:backend", "type:lib"]
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@catalog/domain": "workspace:*",
+    "@catalog/rules": "workspace:*",
+    "@nestjs/common": "11.2.7",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
+  }
+}

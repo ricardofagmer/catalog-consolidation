@@ -1,0 +1,63 @@
+{
+  "name": "@catalog/web",
+  "private": true,
+  "nx": {
+    "name": "web",
+    "projectType": "application",
+    "tags": [
+      "scope:web",
+      "type:app"
+    ],
+    "targets": {
+      "build": {
+        "outputs": [
+          "{projectRoot}/.next/**",
+          "!{projectRoot}/.next/cache/**",
+          "{projectRoot}/next-env.d.ts"
+        ]
+      },
+      "typecheck": {
+        "dependsOn": [
+          "^build",
+          "build"
+        ]
+      }
+    }
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "next dev -H 127.0.0.1 -p 3000",
+    "build": "next build",
+    "start": "next start -H 127.0.0.1 -p 3000",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@catalog/api-client": "workspace:*",
+    "@fontsource-variable/inter": "5.3.0",
+    "@radix-ui/react-dialog": "1.2.0",
+    "@radix-ui/react-dropdown-menu": "2.1.25",
+    "@radix-ui/react-slot": "1.4.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "lucide-react": "1.52.0",
+    "next": "16.3.8",
+    "next-themes": "0.4.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "server-only": "0.0.1",
+    "tailwind-merge": "3.7.0",
+    "tw-animate-css": "1.4.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.8",
+    "tailwindcss": "4.3.3",
+    "typescript-eslint": "8.71.0"
+  }
+}

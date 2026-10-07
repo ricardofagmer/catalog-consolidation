@@ -1,0 +1,423 @@
+{
+  "cwd": "a scratch directory holding data/catalog.db and data/ProductEntry.json copies",
+  "normalizations": [
+    "run id on the first stdout line of consolidate -> <run>",
+    "migrate backup path timestamp -> <timestamp>",
+    "program name in help and usage lines -> <prog>",
+    "JSON log lines: timestamp, correlationId, durationMs -> placeholders; key order kept",
+    "correlationId=<hex> in messages -> correlationId=<id>",
+    "absolute scratch directory -> <work>",
+    "table dumps omit CreatedAt"
+  ],
+  "scenarios": [
+    {
+      "name": "migrate",
+      "description": "migrate a fresh copy: stdout (backup path normalized), one valid backup, SchemaVersion rows, backfilled keys",
+      "commands": [
+        {
+          "step": "01-migrate",
+          "args": "migrate --db data/catalog.db",
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "name": "migrate-up-to-date",
+      "description": "migrate an already migrated copy again",
+      "commands": [
+        {
+          "step": "01-migrate-again",
+          "args": "migrate --db data/catalog.db",
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "name": "consolidate-first",
+      "description": "first consolidation: stdout, JSONL report, tables without CreatedAt (976/255/2)",
+      "commands": [
+        {
+          "step": "01-consolidate",
+          "args": "consolidate --db data/catalog.db --input data/ProductEntry.json --report reports/first.jsonl",
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "name": "consolidate-rerun",
+      "description": "idempotent re-run: rows_written=0, tables unchanged",
+      "commands": [
+        {
+          "step": "01-consolidate-again",
+          "args": "consolidate --db data/catalog.db --input data/ProductEntry.json --report reports/rerun.jsonl",
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "name": "consolidate-dry-run",
+      "description": "dry run on a fresh migrated copy: every decision, nothing committed (975/0/0)",
+      "commands": [
+        {
+          "step": "01-migrate",
+          "args": "migrate --db data/catalog.db",
+          "exit": 0
+        },
+        {
+          "step": "02-consolidate-dry-run",
+          "args": "consolidate --db data/catalog.db --input data/ProductEntry.json --dry-run --report reports/dry.jsonl",
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "name": "error-missing-db",
+      "description": "commands against a database file that does not exist",
+      "commands": [
+        {
+          "step": "01-migrate-missing",
+          "args": "migrate --db data/missing.db",
+          "exit": 2
+        },
+        {
+          "step": "02-consolidate-missing",
+          "args": "consolidate --db data/missing.db --input data/ProductEntry.json",
+          "exit": 2
+        },
+        {
+          "step": "03-review-list-missing",
+          "args": "review list --db data/missing.db",
+          "exit": 2
+        },
+        {
+          "step": "04-review-resolve-missing",
+          "args": "review resolve --db data/missing.db --id 1 --reject",
+          "exit": 2
+        }
+      ]
+    },
+    {
+      "name": "error-unmigrated-db",
+      "description": "commands against an unmigrated copy; the copy stays byte-identical",
+      "commands": [
+        {
+          "step": "01-consolidate-unmigrated",
+          "args": "consolidate --db data/catalog.db --input data/ProductEntry.json",
+          "exit": 2
+        },
+        {
+          "step": "02-review-list-unmigrated",
+          "args": "review list --db data/catalog.db",
+          "exit": 2
+        },
+        {
+          "step": "03-review-resolve-unmigrated",
+          "args": "review resolve --db data/catalog.db --id 1 --reject",
+          "exit": 2
+        }
+      ]
+    },
+    {
+      "name": "error-invalid-seller-file",
+      "description": "invalid seller files (wrong shape, malformed JSON, missing file); tables unchanged",
+      "commands": [
+        {
+          "step": "01-consolidate-object",
+          "args": "consolidate --db data/catalog.db --input data/object.json --report reports/object.jsonl",
+          "exit": 2
+        },
+        {
+          "step": "02-consolidate-malformed",
+          "args": "consolidate --db data/catalog.db --input data/malformed.json --report reports/malformed.jsonl",
+          "exit": 2
+        },
+        {
+          "step": "03-consolidate-absent",
+          "args": "consolidate --db data/catalog.db --input data/absent.json --report reports/absent.jsonl",
+          "exit": 2
+        }
+      ],
+      "rebaselinedFrom": "ts-cli",
+      "rebaselineReason": "Python is being removed; the TS CLI output is the current behavior the PRD says must not change; program name normalized to <prog> (ledger R-4)"
+    },
+    {
+      "name": "review-list",
+      "description": "review list: default page, paging with --limit/--after-id, empty status",
+      "commands": [
+        {
+          "step": "01-list",
+          "args": "review list --db data/catalog.db",
+          "exit": 0
+        },
+        {
+          "step": "02-list-limit-1",
+          "args": "review list --db data/catalog.db --limit 1",
+          "exit": 0
+        },
+        {
+          "step": "03-list-after-1",
+          "args": "review list --db data/catalog.db --limit 1 --after-id 1",
+          "exit": 0
+        },
+        {
+          "step": "04-list-linked",
+          "args": "review list --db data/catalog.db --status LINKED",
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "name": "review-resolve-link",
+      "description": "review resolve --link, then the tables",
+      "commands": [
+        {
+          "step": "01-resolve-1-link",
+          "args": "review resolve --db data/catalog.db --id 1 --link 21",
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "name": "review-resolve-reject",
+      "description": "review resolve --reject, then the tables",
+      "commands": [
+        {
+          "step": "01-resolve-2-reject",
+          "args": "review resolve --db data/catalog.db --id 2 --reject",
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "name": "review-resolve-already-resolved",
+      "description": "resolving an already resolved row and an unknown row; tables unchanged",
+      "commands": [
+        {
+          "step": "01-resolve-1-reject-again",
+          "args": "review resolve --db data/catalog.db --id 1 --reject",
+          "exit": 2
+        },
+        {
+          "step": "02-resolve-2-create-again",
+          "args": "review resolve --db data/catalog.db --id 2 --create",
+          "exit": 2
+        },
+        {
+          "step": "03-resolve-999-unknown",
+          "args": "review resolve --db data/catalog.db --id 999 --reject",
+          "exit": 2
+        }
+      ]
+    },
+    {
+      "name": "review-list-after-resolve",
+      "description": "review list per status after the decisions",
+      "commands": [
+        {
+          "step": "01-list-pending",
+          "args": "review list --db data/catalog.db",
+          "exit": 0
+        },
+        {
+          "step": "02-list-linked",
+          "args": "review list --db data/catalog.db --status LINKED",
+          "exit": 0
+        },
+        {
+          "step": "03-list-rejected",
+          "args": "review list --db data/catalog.db --status REJECTED",
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "name": "consolidate-after-review",
+      "description": "consolidation after review: REVIEWED rows stay authoritative",
+      "commands": [
+        {
+          "step": "01-consolidate",
+          "args": "consolidate --db data/catalog.db --input data/ProductEntry.json --report reports/after-review.jsonl",
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "name": "review-resolve-create",
+      "description": "review resolve --create on a copy taken before the review flow, then consolidation",
+      "commands": [
+        {
+          "step": "01-resolve-1-create",
+          "args": "review resolve --db data/catalog.db --id 1 --create",
+          "exit": 0
+        },
+        {
+          "step": "02-list-created",
+          "args": "review list --db data/catalog.db --status CREATED",
+          "exit": 0
+        },
+        {
+          "step": "03-consolidate",
+          "args": "consolidate --db data/catalog.db --input data/ProductEntry.json --report reports/after-create.jsonl",
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "name": "help-root",
+      "description": "help forms at the top level",
+      "commands": [
+        {
+          "step": "01-help-h",
+          "args": "-h",
+          "exit": 0
+        },
+        {
+          "step": "02-help--help",
+          "args": "--help",
+          "exit": 0
+        },
+        {
+          "step": "03-help-hh",
+          "args": "-hh",
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "name": "help-migrate",
+      "description": "help forms for migrate",
+      "commands": [
+        {
+          "step": "01-help-h",
+          "args": "migrate -h",
+          "exit": 0
+        },
+        {
+          "step": "02-help--help",
+          "args": "migrate --help",
+          "exit": 0
+        },
+        {
+          "step": "03-help-hh",
+          "args": "migrate -hh",
+          "exit": 0
+        }
+      ],
+      "rebaselinedFrom": "ts-cli",
+      "rebaselineReason": "Python is being removed; the TS CLI output is the current behavior the PRD says must not change; program name normalized to <prog> (ledger R-4)"
+    },
+    {
+      "name": "help-consolidate",
+      "description": "help forms for consolidate",
+      "commands": [
+        {
+          "step": "01-help-h",
+          "args": "consolidate -h",
+          "exit": 0
+        },
+        {
+          "step": "02-help--help",
+          "args": "consolidate --help",
+          "exit": 0
+        },
+        {
+          "step": "03-help-hh",
+          "args": "consolidate -hh",
+          "exit": 0
+        }
+      ],
+      "rebaselinedFrom": "ts-cli",
+      "rebaselineReason": "Python is being removed; the TS CLI output is the current behavior the PRD says must not change; program name normalized to <prog> (ledger R-4)"
+    },
+    {
+      "name": "help-review",
+      "description": "help forms for review",
+      "commands": [
+        {
+          "step": "01-help-h",
+          "args": "review -h",
+          "exit": 0
+        },
+        {
+          "step": "02-help--help",
+          "args": "review --help",
+          "exit": 0
+        },
+        {
+          "step": "03-help-hh",
+          "args": "review -hh",
+          "exit": 0
+        }
+      ]
+    },
+    {
+      "name": "help-review-list",
+      "description": "help forms for review list",
+      "commands": [
+        {
+          "step": "01-help-h",
+          "args": "review list -h",
+          "exit": 0
+        },
+        {
+          "step": "02-help--help",
+          "args": "review list --help",
+          "exit": 0
+        },
+        {
+          "step": "03-help-hh",
+          "args": "review list -hh",
+          "exit": 0
+        }
+      ],
+      "rebaselinedFrom": "ts-cli",
+      "rebaselineReason": "Python is being removed; the TS CLI output is the current behavior the PRD says must not change; program name normalized to <prog> (ledger R-4)"
+    },
+    {
+      "name": "help-review-resolve",
+      "description": "help forms for review resolve",
+      "commands": [
+        {
+          "step": "01-help-h",
+          "args": "review resolve -h",
+          "exit": 0
+        },
+        {
+          "step": "02-help--help",
+          "args": "review resolve --help",
+          "exit": 0
+        },
+        {
+          "step": "03-help-hh",
+          "args": "review resolve -hh",
+          "exit": 0
+        }
+      ],
+      "rebaselinedFrom": "ts-cli",
+      "rebaselineReason": "Python is being removed; the TS CLI output is the current behavior the PRD says must not change; program name normalized to <prog> (ledger R-4)"
+    },
+    {
+      "name": "help-never-runs",
+      "description": "help on a full command line runs nothing; the unmigrated copy stays byte-identical",
+      "commands": [
+        {
+          "step": "01-migrate-help",
+          "args": "migrate --db data/catalog.db -h",
+          "exit": 0
+        },
+        {
+          "step": "02-consolidate-help",
+          "args": "consolidate --db data/catalog.db --input data/ProductEntry.json --help",
+          "exit": 0
+        },
+        {
+          "step": "03-review-resolve-help",
+          "args": "review resolve --db data/catalog.db --id 1 --reject -h",
+          "exit": 0
+        }
+      ],
+      "rebaselinedFrom": "ts-cli",
+      "rebaselineReason": "Python is being removed; the TS CLI output is the current behavior the PRD says must not change; program name normalized to <prog> (ledger R-4)"
+    }
+  ]
+}

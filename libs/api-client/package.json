@@ -1,0 +1,27 @@
+{
+  "name": "@catalog/api-client",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "name": "api-client",
+    "projectType": "library",
+    "tags": ["scope:client", "type:lib"],
+    "implicitDependencies": ["api"]
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "generate": "openapi-typescript ../../apps/api/dist/openapi.json -o src/generated/schema.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.17.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0"
+  }
+}

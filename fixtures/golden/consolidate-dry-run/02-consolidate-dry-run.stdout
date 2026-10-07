@@ -1,0 +1,10 @@
+run <run> input=data/ProductEntry.json dry_run=true committed=false rows_written=258
+LINKED_EXACT                 200
+LINKED_NORMALIZED             54
+CREATED                        1
+UNCHANGED                      1
+SKIPPED_DUPLICATE_LISTING     11
+HELD_FOR_REVIEW                2
+REJECTED_INVALID               0
+CONFLICT_SELLER_SKU            0
+TOTAL                        269

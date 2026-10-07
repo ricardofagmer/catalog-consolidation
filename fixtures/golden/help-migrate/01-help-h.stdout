@@ -1,0 +1,5 @@
+usage: <prog> migrate [-h] --db PATH
+
+options:
+  -h, --help  show this help message and exit
+  --db PATH   path to the SQLite catalog

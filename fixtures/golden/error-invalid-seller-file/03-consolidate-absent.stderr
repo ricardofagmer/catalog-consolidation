@@ -1,0 +1,2 @@
+error: invalid input file: unreadable: data/absent.json: not a readable file
+{"timestamp":"<timestamp>","level":"error","service":"catalog_consolidation","event":"consolidate.failed","correlationId":"<id>","errorType":"InvalidInputFileError","durationMs":"<ms>"}

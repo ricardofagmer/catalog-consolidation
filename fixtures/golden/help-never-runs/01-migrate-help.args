@@ -1,0 +1,1 @@
+migrate --db data/catalog.db -h

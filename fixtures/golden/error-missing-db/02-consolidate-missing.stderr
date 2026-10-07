@@ -1,0 +1,2 @@
+error: database: not_found: database file not found: data/missing.db
+{"timestamp":"<timestamp>","level":"error","service":"catalog_consolidation","event":"consolidate.failed","correlationId":"<id>","errorType":"DatabaseFileError","durationMs":"<ms>"}

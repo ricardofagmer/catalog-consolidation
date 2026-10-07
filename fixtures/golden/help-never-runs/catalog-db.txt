@@ -1,0 +1,1 @@
+scratch data/catalog.db byte-identical to the source catalog

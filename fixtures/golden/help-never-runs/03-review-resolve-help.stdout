@@ -1,0 +1,9 @@
+usage: <prog> review resolve [-h] --db PATH --id N (--create | --reject | --link PRODUCT_ID)
+
+options:
+  -h, --help         show this help message and exit
+  --db PATH          path to the SQLite catalog
+  --id N             review row Id
+  --create           create a new catalog product from the seller's values and link it
+  --reject           reject the row; later re-sends stay held for review
+  --link PRODUCT_ID  link the seller SKU to this existing catalog product

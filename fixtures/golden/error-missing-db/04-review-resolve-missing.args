@@ -1,0 +1,1 @@
+review resolve --db data/missing.db --id 1 --reject

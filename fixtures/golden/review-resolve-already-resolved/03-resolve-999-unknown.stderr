@@ -1,0 +1,2 @@
+error: review_not_found: review 999 does not exist
+{"timestamp":"<timestamp>","level":"error","service":"catalog_consolidation","event":"review.resolve.failed","correlationId":"<id>","errorType":"ReviewResolutionError","durationMs":"<ms>"}

@@ -1,0 +1,1 @@
+review resolve --db data/catalog.db --id 1 --reject -h

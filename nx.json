@@ -1,0 +1,143 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "neverConnectToCloud": true,
+  "analytics": false,
+  "namedInputs": {
+    "sharedGlobals": [
+      "{workspaceRoot}/tsconfig.base.json",
+      "{workspaceRoot}/pnpm-workspace.yaml",
+      "{workspaceRoot}/.nvmrc"
+    ],
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
+    "lintConfig": [
+      "{workspaceRoot}/eslint.config.mjs",
+      "{workspaceRoot}/eslint.module-boundaries.mjs",
+      "{projectRoot}/eslint.config.mjs"
+    ],
+    "production": [
+      "default",
+      "!{projectRoot}/eslint.config.mjs",
+      "!{projectRoot}/.env.example"
+    ]
+  },
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": [
+        "^build",
+        "generate"
+      ],
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "externalDependencies": [
+            "typescript"
+          ]
+        },
+        {
+          "dependentTasksOutputFiles": "**/generated/**",
+          "transitive": true
+        }
+      ],
+      "outputs": [
+        "{projectRoot}/dist"
+      ]
+    },
+    "typecheck": {
+      "cache": true,
+      "dependsOn": [
+        "^build",
+        "generate"
+      ],
+      "inputs": [
+        "default",
+        "^production",
+        {
+          "externalDependencies": [
+            "typescript"
+          ]
+        },
+        {
+          "dependentTasksOutputFiles": "**/generated/**",
+          "transitive": true
+        }
+      ],
+      "outputs": []
+    },
+    "lint": {
+      "cache": true,
+      "dependsOn": [
+        "^build",
+        "generate"
+      ],
+      "inputs": [
+        "default",
+        "lintConfig",
+        "^production",
+        "{workspaceRoot}/nx.json",
+        {
+          "dependentTasksOutputFiles": "**/generated/**",
+          "transitive": true
+        }
+      ],
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "continuous": true,
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "start": {
+      "cache": false,
+      "continuous": true
+    },
+    "serve": {
+      "cache": false,
+      "continuous": true,
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "openapi": {
+      "cache": false,
+      "dependsOn": [
+        "^build",
+        "build"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/openapi.json"
+      ]
+    },
+    "generate": {
+      "cache": true,
+      "dependsOn": [
+        {
+          "projects": [
+            "api"
+          ],
+          "target": "openapi"
+        }
+      ],
+      "inputs": [
+        "{projectRoot}/package.json",
+        {
+          "dependentTasksOutputFiles": "**/openapi.json"
+        },
+        {
+          "externalDependencies": [
+            "openapi-typescript"
+          ]
+        }
+      ],
+      "outputs": [
+        "{projectRoot}/src/generated"
+      ]
+    }
+  }
+}

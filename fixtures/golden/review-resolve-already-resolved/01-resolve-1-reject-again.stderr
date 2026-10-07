@@ -1,0 +1,2 @@
+error: review_not_pending: review 1 is LINKED, only PENDING can be resolved
+{"timestamp":"<timestamp>","level":"error","service":"catalog_consolidation","event":"review.resolve.failed","correlationId":"<id>","errorType":"ReviewResolutionError","durationMs":"<ms>"}
