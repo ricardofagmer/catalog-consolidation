@@ -120,7 +120,8 @@ applied 0002 product_match_keys (backfilled 975 products)
 applied 0003 review_queue
 applied 0004 seller_table
 applied 0005 seller_product_drop_source_columns
-schema version: 5
+applied 0006 canonical_brand_spelling
+schema version: 6
 ```
 
 `consolidate` output on the provided data, first run (`<run_id>` is a fresh UUID hex each run):
@@ -162,7 +163,7 @@ never runs a command and never writes. The top-level usage line is
 
 - `migrate` applies pending migrations from `migrations/`. Before applying anything it copies
   the database to `<db>.pre-migrate-<timestamp>.bak`. When nothing is pending it prints
-  `schema version: 5 (up to date)` and takes no backup.
+  `schema version: 6 (up to date)` and takes no backup.
 - `consolidate` refuses to run on a missing file or on a database below schema version 5. In
   both cases it exits 2 and, for the schema case, prints the `migrate` command to run.
   `--dry-run` makes every decision and then rolls back (`committed=false`). `--report` writes
@@ -312,6 +313,7 @@ applied migration with a SHA-256 checksum. Editing an applied migration file fai
 | `0003_review_queue` | Creates `ProductMatchReview` (candidate, score, reason `FUZZY`/`AMBIGUOUS`, status `PENDING`/`LINKED`/`CREATED`/`REJECTED`), unique per seller SKU. |
 | `0004_seller_table` | Creates `Seller` (`Id`, unique `Name`), backfilled from existing links and reviews. `SellerProduct` and `ProductMatchReview` swap `SellerName` for a `SellerId` foreign key; `SellerProduct` is the N:N link between `Seller` and `Product`. |
 | `0005_seller_product_drop_source_columns` | Drops `SourceName`, `SourceBrand` and `SourceCategory` from `SellerProduct`: they duplicated `Product`. `ProductMatchReview` keeps them. |
+| `0006_canonical_brand_spelling` | Data only: sets the display `Product.Brand` to the brand's own spelling for every product whose normalized brand is `simplehuman` or `black decker` (`simplehuman`, `BLACK+DECKER`). Match keys are unchanged. Like the others it has no down path; restore the `.bak` to undo it. |
 
 There are no down migrations. Recovery is the `.bak` file that `migrate` writes first.
 
