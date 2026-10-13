@@ -1,6 +1,6 @@
 # 01. Brand spelling migration and golden fixtures
 
-**Status:** ready-for-agent
+**Status:** done
 Blocked by: none
 Closes checks: AC1, AC2, AC3, AC4, AC5 (proven by ticket 02)
 
