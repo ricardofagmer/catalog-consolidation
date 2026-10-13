@@ -28,6 +28,8 @@ export interface CatalogRepository extends CatalogReader {
   findLinkBySku(args: { sellerName: string; sellerProductId: string }): SellerLink | null;
   findLinkBySellerProduct(args: { sellerName: string; productId: number }): SellerLink | null;
   findReviewBySku(args: { sellerName: string; sellerProductId: string }): ReviewItem | null;
+  // Registers the seller in the Seller table when it is new; returns its id either way.
+  registerSeller(args: { sellerName: string }): number;
   insertProduct(product: NewProduct): number;
   insertLink(link: NewSellerLink): number;
   enqueueReview(review: NewReviewItem): number;

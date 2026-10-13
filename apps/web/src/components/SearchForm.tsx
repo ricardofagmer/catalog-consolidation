@@ -14,9 +14,10 @@ const DEBOUNCE_MS = 300;
 const HELPER_ID = "q-help";
 
 // The search lives in the URL, so every result page is shareable and the form still works as a plain
-// GET submit without JavaScript (Enter or the Search button, any length). With JavaScript the URL is
-// also updated while typing; replace keeps one history entry per search session instead of one per
-// keystroke, and the input is uncontrolled so results re-rendering never steals its value or focus.
+// GET submit without JavaScript (Enter, any length: a lone text field submits implicitly). With
+// JavaScript the URL is also updated while typing; replace keeps one history entry per search session
+// instead of one per keystroke, and the input is uncontrolled so results re-rendering never steals its
+// value or focus.
 export function SearchForm({ query }: { readonly query: string | null }): ReactNode {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -118,7 +119,6 @@ export function SearchForm({ query }: { readonly query: string | null }): ReactN
           />
         </div>
       </div>
-      <Button type="submit">Search</Button>
       {query === null ? null : (
         <Button asChild variant="ghost">
           <Link href="/">

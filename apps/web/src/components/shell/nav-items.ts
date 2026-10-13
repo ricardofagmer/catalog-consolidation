@@ -1,4 +1,4 @@
-import { ListChecks, Package, type LucideIcon } from "lucide-react";
+import { Link2, ListChecks, Package, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
   readonly href: string;
@@ -10,6 +10,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/", label: "Catalog", icon: Package, sectionPrefixes: ["/products/"] },
+  { href: "/seller-links", label: "Seller links", icon: Link2, sectionPrefixes: ["/seller-links/"] },
   { href: "/reviews", label: "Review queue", icon: ListChecks, sectionPrefixes: ["/reviews/"] },
 ];
 

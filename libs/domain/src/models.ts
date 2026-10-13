@@ -133,9 +133,6 @@ export interface NewSellerLink {
   readonly sellerName: string;
   readonly sellerProductId: string;
   readonly productId: number;
-  readonly sourceName: string;
-  readonly sourceBrand: string | null;
-  readonly sourceCategory: string | null;
   readonly matchType: MatchType;
 }
 

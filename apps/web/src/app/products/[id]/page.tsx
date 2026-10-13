@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import { PageHeader } from "../../../components/shell/page-header";
 import { EmptyState } from "../../../components/states/empty-state";
 import { Badge } from "../../../components/ui/badge";
+import { listSellers } from "../../../lib/catalog-api";
+import { AddSellerLinksForm } from "./add-seller-links-form";
 import { findProduct } from "./find-product";
 import { ProductFacts } from "./product-facts";
 import { SellerLinksTable } from "./seller-links-table";
@@ -21,6 +23,7 @@ export default async function ProductPage(props: { readonly params: Promise<{ id
     notFound();
   }
   const sellerLinks = product.offers;
+  const sellerNames = (await listSellers()).items.map((seller) => seller.name);
 
   return (
     <div className="flex flex-col gap-6">
@@ -41,13 +44,18 @@ export default async function ProductPage(props: { readonly params: Promise<{ id
             </Badge>
           </h2>
           <p className="text-sm text-muted-foreground">
-            What each seller sent for this product, and how it was matched to the catalog row.
+            The sellers linked to this product, and how each link was made. Add, edit or delete a link here.
           </p>
         </div>
+        <AddSellerLinksForm
+          productId={product.id}
+          sellerNames={sellerNames}
+          linkedSellerNames={sellerLinks.items.map((link) => link.sellerName)}
+        />
         {sellerLinks.items.length === 0 ? (
           <EmptyState icon={<Store />} title="No seller is linked to this product yet." />
         ) : (
-          <SellerLinksTable rows={sellerLinks.items} />
+          <SellerLinksTable productId={product.id} rows={sellerLinks.items} sellerNames={sellerNames} />
         )}
         {sellerLinks.hasMore ? <p className="text-sm text-muted-foreground">Showing the first 100 seller links.</p> : null}
       </section>

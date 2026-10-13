@@ -42,7 +42,7 @@ The 17 ambiguities and the resolution chosen (evidence and rejected options in [
 | # | Ambiguity | Resolution |
 |---|---|---|
 | A1 | What "duplicate product" means | Same normalized name and compatible brand; fuzzy similarity never merges |
-| A2 | Is Category part of identity? | No; kept on the link row as `SourceCategory` |
+| A2 | Is Category part of identity? | No; the catalog `Product.Category` is the only copy (migration 0005 dropped the seller's copy from the link) |
 | A3 | How a NULL brand compares | Compatible with any brand: unknown is not different; a link made with exactly one NULL side carries the warning `brand_unverified_null` |
 | A4 | String seller `Id` vs `INTEGER` column | `SellerProductId` becomes `TEXT NOT NULL` (table rebuild) |
 | A5 | Are seller Ids globally unique? | No; unique per seller: `UNIQUE (SellerName, SellerProductId)` |
@@ -50,12 +50,12 @@ The 17 ambiguities and the resolution chosen (evidence and rejected options in [
 | A7 | Same seller and Id sent again | `UNCHANGED` if it resolves to the same product, else `CONFLICT_SELLER_SKU` |
 | A8 | Translations and synonyms | `HELD_FOR_REVIEW` with candidate and score; no dictionary |
 | A9 | Hostile and malformed input | Parameterized SQL, values stored verbatim; `Id` charset allowlist, non-UUID accepted with a warning |
-| A10 | Whose attributes win (golden record) | The catalog row, never overwritten; seller raw values live on the link row |
+| A10 | Whose attributes win (golden record) | The catalog row, never overwritten; the link row holds only the seller SKU and `MatchType` |
 | A11 | More than one catalog product matches | `HELD_FOR_REVIEW` with reason `AMBIGUOUS` |
 | A12 | What to do with uncertain matches | Review queue; 0.80 decides "queue" vs "create", never "link" |
 | A13 | Partial failure of a file | Bad record `REJECTED_INVALID`, rest proceeds; one transaction per run; a bad file writes nothing (exit 2) |
 | A14 | Re-running the same file | Idempotent: zero rows written; `--dry-run` rolls back |
-| A15 | Seller as a string or an entity | Keep the `SellerName` string; a `Seller` table is deferred |
+| A15 | Seller as a string or an entity | Superseded by migration 0004: a `Seller` table (`Id`, unique `Name`) registers every seller in the file; `SellerProduct` is the N:N link (`SellerId`, `ProductId`) and `ProductMatchReview` points at `Seller` too |
 | A16 | Numeric versus string seller Ids (original SellerProductId column is INTEGER, file Ids are strings) | Strings are stored as sent; a JSON number that is a safe integer is converted to its decimal text (`12345` and `"12345"` are the same SKU); any other number or type is REJECTED_INVALID (`not_a_string:Id`); pre-existing integer links are cast to TEXT by migration 0001. |
 | A17 | Seller identity normalization (file has only a seller name string) | Name trimmed only, then compared case-sensitively with no alias table; a spelling variant counts as a separate seller (recorded as a known limitation). |
 
@@ -118,13 +118,15 @@ backup: out/catalog.db.pre-migrate-<timestamp>.bak
 applied 0001 seller_product_text_id
 applied 0002 product_match_keys (backfilled 975 products)
 applied 0003 review_queue
-schema version: 3
+applied 0004 seller_table
+applied 0005 seller_product_drop_source_columns
+schema version: 5
 ```
 
 `consolidate` output on the provided data, first run (`<run_id>` is a fresh UUID hex each run):
 
 ```
-run <run_id> input=data/ProductEntry.json dry_run=false committed=true rows_written=258
+run <run_id> input=data/ProductEntry.json dry_run=false committed=true rows_written=278
 LINKED_EXACT                 200
 LINKED_NORMALIZED             54
 CREATED                        1
@@ -160,8 +162,8 @@ never runs a command and never writes. The top-level usage line is
 
 - `migrate` applies pending migrations from `migrations/`. Before applying anything it copies
   the database to `<db>.pre-migrate-<timestamp>.bak`. When nothing is pending it prints
-  `schema version: 3 (up to date)` and takes no backup.
-- `consolidate` refuses to run on a missing file or on a database below schema version 3. In
+  `schema version: 5 (up to date)` and takes no backup.
+- `consolidate` refuses to run on a missing file or on a database below schema version 5. In
   both cases it exits 2 and, for the schema case, prints the `migrate` command to run.
   `--dry-run` makes every decision and then rolls back (`committed=false`). `--report` writes
   one JSON object per entry, in input order, through a temporary file and an atomic rename, e.g.
@@ -245,8 +247,9 @@ For each entry, in file order:
      and the seller is linked to it.
 
 The catalog row is the golden record: linking never overwrites `Product.Name`, `Brand` or
-`Category`. Each seller's raw values are kept on the link row (`SourceName`, `SourceBrand`,
-`SourceCategory`). Every SQL statement is parameterized.
+`Category`. The link row (`SellerProduct`) holds only the seller, the product, the seller's SKU and the
+`MatchType`; the seller's raw name, brand and category are not stored for a linked offer (a pending
+Review Item keeps them until a person decides). Every SQL statement is parameterized.
 
 Before matching, every run also fills in missing match keys for any `Product` row whose
 `NormalizedName` is NULL, for example rows inserted by another tool.
@@ -282,7 +285,7 @@ from `WARNING_CODES` in `libs/domain/src/models.ts`:
 
 ## Results on the provided data (2026-10-05)
 
-- 269 entries, 258 rows written. After the run: `SellerProduct` 255 rows, `Product` 976 rows
+- 269 entries, 278 rows written. After the run: `Seller` 20 rows, `SellerProduct` 255 rows, `Product` 976 rows
   (975 + 1), `ProductMatchReview` 2 rows.
 - Held for review: `Roteador WiFi 6 TP-Link` (score about 0.91 against `Router WiFi 6 TP-Link`) and
   `Processador AMD Ryzen 9 7950X` (about 0.96 against `Processor AMD Ryzen 9 7950X`). These are
@@ -307,6 +310,8 @@ applied migration with a SHA-256 checksum. Editing an applied migration file fai
 | `0001_seller_product_text_id` | Rebuilds `SellerProduct`: `SellerProductId` becomes `TEXT`. Adds `SourceName`, `SourceBrand`, `SourceCategory`, `MatchType` (`EXACT`, `NORMALIZED`, `CREATED`, `REVIEWED`) and `CreatedAt`. Adds `UNIQUE (SellerName, SellerProductId)` and `UNIQUE (SellerName, ProductId)`. If the row count changes during the copy (orphan links), the migration rolls back with `rows_lost`. |
 | `0002_product_match_keys` | Adds `Product.NormalizedName` and `NormalizedBrand` (indexed, not unique) and backfills them with the same normalizer the matcher uses (`NormalizationService`), not with SQL. |
 | `0003_review_queue` | Creates `ProductMatchReview` (candidate, score, reason `FUZZY`/`AMBIGUOUS`, status `PENDING`/`LINKED`/`CREATED`/`REJECTED`), unique per seller SKU. |
+| `0004_seller_table` | Creates `Seller` (`Id`, unique `Name`), backfilled from existing links and reviews. `SellerProduct` and `ProductMatchReview` swap `SellerName` for a `SellerId` foreign key; `SellerProduct` is the N:N link between `Seller` and `Product`. |
+| `0005_seller_product_drop_source_columns` | Drops `SourceName`, `SourceBrand` and `SourceCategory` from `SellerProduct`: they duplicated `Product`. `ProductMatchReview` keeps them. |
 
 There are no down migrations. Recovery is the `.bak` file that `migrate` writes first.
 
@@ -427,7 +432,7 @@ reports cache hits.
 |---|---|
 | Python 3.12 standard-library CLI over SQLite, no runtime dependencies (superseded by 0006) | [ADR 0001](docs/adr/0001-python-stdlib-cli.md) |
 | Identity is the normalized name plus a compatible brand; category is not identity; NULL brand is compatible with any brand | [ADR 0002](docs/adr/0002-product-identity-normalized-name-and-brand.md) |
-| Seller SKU is opaque `TEXT`, unique per seller; seller values live on the link row; the catalog row is never overwritten | [ADR 0003](docs/adr/0003-seller-link-schema-and-golden-record.md) |
+| Seller SKU is opaque `TEXT`, unique per seller; the link row holds no seller attributes; the catalog row is never overwritten | [ADR 0003](docs/adr/0003-seller-link-schema-and-golden-record.md) |
 | Uncertain matches (fuzzy, ambiguous) go to a review queue and are never linked or created automatically | [ADR 0004](docs/adr/0004-review-queue-for-uncertain-matches.md) |
 | One transaction per file, validation per record, re-runs are no-ops | [ADR 0005](docs/adr/0005-all-or-nothing-idempotent-runs.md) |
 | TypeScript throughout, one implementation of the rules for every entry point (partly superseded by the two Nx and Nest records below) | [ADR 0006](docs/adr/0006-typescript-shared-core.md) |
@@ -499,7 +504,7 @@ archive in `.engineos/archived/` mentioned under [Workspace layout](#workspace-l
   any brand (unknown is not different, A3), an entry with a brand can link to a catalog product that
   has none, or a brandless entry can link to a branded product. A wrong-brand match of this kind is
   possible and is not prevented. It is surfaced: the new link's report line carries the warning
-  `brand_unverified_null`, so an operator can audit it, and the link row keeps `SourceBrand`.
+  `brand_unverified_null`, so an operator can audit it, and `MatchType` records how the link was made.
   Re-runs report such a link as `UNCHANGED` without the warning, so the first-run report is the
   place to find them.
 - **`CONFLICT_SELLER_SKU` names only the existing product.** The report's `productId` is the product

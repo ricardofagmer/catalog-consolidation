@@ -2,7 +2,7 @@
 // back to its default instead of erroring, so a hand-edited URL still renders a page.
 // Paging semantics (defaults, cursors) belong to the API; this only keeps a hand-edited value from
 // turning into an API 400 and the error page.
-import type { ApiErrorCode, ResolvedReviewStatus, ReviewStatus } from "@catalog/api-client";
+import type { ApiErrorCode, ProductSortField, ResolvedReviewStatus, ReviewStatus, SortOrder } from "@catalog/api-client";
 
 export type RawSearchParams = Readonly<Record<string, string | string[] | undefined>>;
 
@@ -24,15 +24,37 @@ export const REVIEW_ERROR_CODES = [
 ] as const satisfies readonly ApiErrorCode[];
 export type ReviewErrorCode = (typeof REVIEW_ERROR_CODES)[number];
 
-// C-API bounds: q at most 200 code points, limit 1..100.
+const PRODUCT_SORT_FIELDS = [
+  "id",
+  "name",
+  "brand",
+  "category",
+  "sellers",
+  "sellerCount",
+] as const satisfies readonly ProductSortField[];
+const SORT_ORDERS = ["asc", "desc"] as const satisfies readonly SortOrder[];
+
+// C-API bounds: q at most 200 code points, limit 1..100, offset 0..1000000.
 export const SEARCH_QUERY_MAX_LENGTH = 200;
 const PAGE_MAX_LIMIT = 100;
+const PAGE_MAX_OFFSET = 1_000_000;
 
 export interface CatalogSearchParams {
-  readonly afterId: number;
+  readonly sort: ProductSortField;
+  readonly order: SortOrder;
+  readonly offset: number;
   /** Null means the API's default page size. */
   readonly limit: number | null;
   readonly query: string | null;
+}
+
+/** What the catalog shows, as opposed to where in it the page is. */
+export type CatalogView = Pick<CatalogSearchParams, "sort" | "order" | "limit" | "query">;
+
+export interface SellerLinkSearchParams {
+  readonly afterId: number;
+  /** Null means the API's default page size. */
+  readonly limit: number | null;
 }
 
 export interface ReviewSearchParams {
@@ -47,6 +69,10 @@ export interface ReviewSearchParams {
 }
 
 const DEFAULT_AFTER_ID = 0;
+const DEFAULT_OFFSET = 0;
+// The web lists by name; the API's own default stays id so existing API consumers are unaffected.
+const DEFAULT_PRODUCT_SORT: ProductSortField = "name";
+const DEFAULT_SORT_ORDER: SortOrder = "asc";
 const DEFAULT_REVIEW_STATUS: ReviewStatus = "PENDING";
 const POSITIVE_INTEGER_PATTERN = /^[1-9][0-9]*$/;
 
@@ -64,10 +90,41 @@ export function parseNonNegativeInteger(value: unknown): number | null {
 
 export function parseCatalogSearchParams(raw: RawSearchParams): CatalogSearchParams {
   return {
-    afterId: parseAfterId(raw),
+    sort: memberOrNull(PRODUCT_SORT_FIELDS, singleValue(raw.sort)) ?? DEFAULT_PRODUCT_SORT,
+    order: memberOrNull(SORT_ORDERS, singleValue(raw.order)) ?? DEFAULT_SORT_ORDER,
+    offset: parseOffset(raw),
     limit: parseLimit(raw),
     query: parseQuery(singleValue(raw.q)),
   };
+}
+
+export function parseSellerLinkSearchParams(raw: RawSearchParams): SellerLinkSearchParams {
+  return {
+    afterId: parseAfterId(raw),
+    limit: parseLimit(raw),
+  };
+}
+
+/**
+ * The catalog view (search, page size, sort) as URL params, without the page position, which
+ * Pagination owns. Only non-default values are carried, so a link stays as short as one the user
+ * would type.
+ */
+export function catalogViewParams(view: CatalogView): Record<string, string> {
+  const params: Record<string, string> = {};
+  if (view.query !== null) {
+    params.q = view.query;
+  }
+  if (view.limit !== null) {
+    params.limit = String(view.limit);
+  }
+  if (view.sort !== DEFAULT_PRODUCT_SORT) {
+    params.sort = view.sort;
+  }
+  if (view.order !== DEFAULT_SORT_ORDER) {
+    params.order = view.order;
+  }
+  return params;
 }
 
 export function parseReviewSearchParams(raw: RawSearchParams): ReviewSearchParams {
@@ -90,6 +147,11 @@ function singleValue(value: string | string[] | undefined): string | undefined {
 
 function parseAfterId(raw: RawSearchParams): number {
   return parseNonNegativeInteger(singleValue(raw.after)) ?? DEFAULT_AFTER_ID;
+}
+
+function parseOffset(raw: RawSearchParams): number {
+  const offset = parseNonNegativeInteger(singleValue(raw.offset));
+  return offset !== null && offset <= PAGE_MAX_OFFSET ? offset : DEFAULT_OFFSET;
 }
 
 function parseLimit(raw: RawSearchParams): number | null {

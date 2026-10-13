@@ -12,6 +12,7 @@ const API_ERROR_CODES = [
   "invalid_request",
   "product_not_found",
   "review_not_found",
+  "seller_link_not_found",
   "review_not_pending",
   "seller_sku_already_linked",
   "seller_already_linked_to_product",

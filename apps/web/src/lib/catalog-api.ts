@@ -4,17 +4,24 @@ import "server-only";
 import type {
   ProductDetail,
   ProductPage,
+  ProductSortField,
   ResolutionRequest,
   ResolutionResponse,
   ReviewPage,
   ReviewStatus,
+  SellerLinkListPage,
+  SellerLinkRequest,
+  SellerList,
+  SortOrder,
   Summary,
 } from "@catalog/api-client";
 import { failApiRequest, sendApiRequest, type ApiFailure } from "./api-transport";
+import { isSellerLinkErrorCode, type SellerLinkErrorCode } from "./seller-link-messages";
 import { isReviewErrorCode, type ReviewErrorCode } from "./search-params";
 
 const NOT_FOUND_STATUS = 404;
 const BAD_REQUEST_STATUS = 400;
+const JSON_CONTENT_TYPE = { "Content-Type": "application/json" } as const;
 
 export type ReviewResolutionOutcome =
   | { readonly kind: "resolved"; readonly result: ResolutionResponse }
@@ -29,20 +36,42 @@ export async function getSummary(): Promise<Summary> {
   return outcome.kind === "ok" ? outcome.data : failApiRequest({ operation, failure: outcome.failure });
 }
 
+// Pages by offset, never `after`: the API accepts its id keyset only for id order, and the web lists
+// by any column.
 export async function listProducts(args: {
-  readonly afterId: number;
+  readonly sort: ProductSortField;
+  readonly order: SortOrder;
+  readonly offset: number;
   readonly limit: number | null;
   readonly query: string | null;
 }): Promise<ProductPage> {
   const operation = "products.list";
   const query = {
-    after: args.afterId,
+    sort: args.sort,
+    order: args.order,
+    offset: args.offset,
     ...(args.limit === null ? {} : { limit: args.limit }),
     ...(args.query === null ? {} : { q: args.query }),
   };
   const outcome = await sendApiRequest({
     operation,
     send: (client, headers) => client.GET("/v1/products", { headers, params: { query } }),
+  });
+  return outcome.kind === "ok" ? outcome.data : failApiRequest({ operation, failure: outcome.failure });
+}
+
+export async function listSellerLinks(args: {
+  readonly afterId: number;
+  readonly limit: number | null;
+}): Promise<SellerLinkListPage> {
+  const operation = "sellerLinks.list";
+  const query = {
+    after: args.afterId,
+    ...(args.limit === null ? {} : { limit: args.limit }),
+  };
+  const outcome = await sendApiRequest({
+    operation,
+    send: (client, headers) => client.GET("/v1/seller-links", { headers, params: { query } }),
   });
   return outcome.kind === "ok" ? outcome.data : failApiRequest({ operation, failure: outcome.failure });
 }
@@ -102,6 +131,82 @@ export async function resolveReview(args: {
   }
   const { code } = outcome.failure;
   return isReviewErrorCode(code) ? { kind: "rejected", code } : failApiRequest({ operation, failure: outcome.failure });
+}
+
+export type SellerLinkOutcome =
+  | { readonly kind: "done" }
+  | { readonly kind: "rejected"; readonly code: SellerLinkErrorCode };
+
+/** Every registered seller, by name: the options of the add form's combobox and the edit select. */
+export async function listSellers(): Promise<SellerList> {
+  const operation = "sellers.list";
+  const outcome = await sendApiRequest({
+    operation,
+    send: (client, headers) => client.GET("/v1/sellers", { headers }),
+  });
+  return outcome.kind === "ok" ? outcome.data : failApiRequest({ operation, failure: outcome.failure });
+}
+
+/** Links every listed seller to the product in one request: all are added, or none. */
+export async function addSellerLinks(args: {
+  readonly productId: number;
+  readonly links: readonly SellerLinkRequest[];
+}): Promise<SellerLinkOutcome> {
+  const operation = "sellerLinks.add";
+  const outcome = await sendApiRequest({
+    operation,
+    send: (client, headers) =>
+      client.POST("/v1/products/{id}/seller-links", {
+        headers,
+        params: { path: { id: args.productId } },
+        body: { links: [...args.links] },
+      }),
+  });
+  return outcome.kind === "ok" ? { kind: "done" } : sellerLinkRefusal({ operation, failure: outcome.failure });
+}
+
+export async function updateSellerLink(args: {
+  readonly productId: number;
+  readonly linkId: number;
+  readonly request: SellerLinkRequest;
+}): Promise<SellerLinkOutcome> {
+  const operation = "sellerLinks.update";
+  const outcome = await sendApiRequest({
+    operation,
+    send: (client, headers) =>
+      client.PUT("/v1/products/{id}/seller-links/{linkId}", {
+        headers,
+        params: { path: { id: args.productId, linkId: args.linkId } },
+        body: args.request,
+      }),
+  });
+  return outcome.kind === "ok" ? { kind: "done" } : sellerLinkRefusal({ operation, failure: outcome.failure });
+}
+
+export async function removeSellerLink(args: {
+  readonly productId: number;
+  readonly linkId: number;
+}): Promise<SellerLinkOutcome> {
+  const operation = "sellerLinks.remove";
+  const outcome = await sendApiRequest({
+    operation,
+    send: async (client, headers) => {
+      // The API answers 204 with no body, which sendApiRequest would read as a failure; the DELETE
+      // has no body but, like every API write, must declare JSON.
+      const result = await client.DELETE("/v1/products/{id}/seller-links/{linkId}", {
+        headers: { ...headers, ...JSON_CONTENT_TYPE },
+        params: { path: { id: args.productId, linkId: args.linkId } },
+      });
+      return { data: result.response.ok ? true : undefined, error: result.error, response: result.response };
+    },
+  });
+  return outcome.kind === "ok" ? { kind: "done" } : sellerLinkRefusal({ operation, failure: outcome.failure });
+}
+
+// A closed set of expected refusals comes back as a code for the form; anything else throws.
+function sellerLinkRefusal(args: { readonly operation: string; readonly failure: ApiFailure }): SellerLinkOutcome {
+  const { code } = args.failure;
+  return isSellerLinkErrorCode(code) ? { kind: "rejected", code } : failApiRequest(args);
 }
 
 // The web already refuses non-integer ids before calling; invalid_request still covers ids the API

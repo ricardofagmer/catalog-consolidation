@@ -1,7 +1,7 @@
 # 0003. Store seller attributes on the link row and never overwrite the catalog product
 
 Date: 2026-10-05
-Status: proposed
+Status: proposed (the `Seller` decision below is superseded by migration 0004, 2026-10-13)
 
 ## Context
 
@@ -73,3 +73,11 @@ to matching.
   justifies a `Seller` table with a stable id; the same seller must legitimately list two SKUs
   against one product (drop `UNIQUE (SellerName, ProductId)` in favour of a variant model); or
   attribute history is requested, which is the `SellerProductSnapshot` option.
+
+## Update 2026-10-13: Seller table
+
+The revisit trigger was pulled: sellers are now rows. Migration `0004_seller_table.sql` adds `Seller (Id, Name UNIQUE, CreatedAt)`, backfilled from existing links and review rows, and rebuilds `SellerProduct` and `ProductMatchReview` with a `SellerId` foreign key in place of the `SellerName` text column. `SellerProduct` is the N:N link between `Seller` and `Product`; its uniqueness keys become `(SellerId, SellerProductId)` and `(SellerId, ProductId)`. Seller identity is still the trimmed, case-sensitive name (A17); `consolidate` registers every valid seller, even when its entries only resolve to existing links. The domain and API keep exposing `sellerName`, read through a join.
+
+## Update 2026-10-13: link row no longer stores seller attributes
+
+Migration `0005_seller_product_drop_source_columns.sql` drops `SourceName`, `SourceBrand` and `SourceCategory` from `SellerProduct`, reversing option 3 above. In the delivered data 201 of 255 links carried values identical to the catalog row; 54 differed only by whitespace, quotes or accents (the `NORMALIZED` links) and 1 by a missing brand. The link row keeps `MatchType` as the audit trail. What is lost: the seller's original spelling for those 54 links and the NULL-brand evidence (the report still warns `brand_unverified_null` on the first run). `ProductMatchReview` keeps its Source columns, since an unresolved entry has no product to read them from.

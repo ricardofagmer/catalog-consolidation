@@ -11,15 +11,6 @@ export class SellerOfferDto {
   @ApiProperty({ description: "The seller's own product id (SKU), opaque" })
   readonly sellerProductId: string;
 
-  @ApiProperty({ description: "Product name exactly as the seller sent it" })
-  readonly sourceName: string;
-
-  @ApiProperty({ type: String, nullable: true, description: "Brand exactly as the seller sent it" })
-  readonly sourceBrand: string | null;
-
-  @ApiProperty({ type: String, nullable: true, description: "Category exactly as the seller sent it" })
-  readonly sourceCategory: string | null;
-
   @ApiProperty({
     enum: MATCH_TYPES,
     enumName: "MatchType",
@@ -33,9 +24,6 @@ export class SellerOfferDto {
     this.id = fields.id;
     this.sellerName = fields.sellerName;
     this.sellerProductId = fields.sellerProductId;
-    this.sourceName = fields.sourceName;
-    this.sourceBrand = fields.sourceBrand;
-    this.sourceCategory = fields.sourceCategory;
     this.matchType = fields.matchType;
   }
 }

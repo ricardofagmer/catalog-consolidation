@@ -15,9 +15,6 @@ export function newLink(args: { entry: SellerEntry; productId: number; matchType
     sellerName: args.entry.sellerName,
     sellerProductId: args.entry.sellerProductId,
     productId: args.productId,
-    sourceName: args.entry.name,
-    sourceBrand: args.entry.brand,
-    sourceCategory: args.entry.category,
     matchType: args.matchType,
   };
 }

@@ -25,4 +25,4 @@ export const REPORT_SCORE_DECIMALS = 4;
 export const REVIEW_PAGE_DEFAULT_LIMIT = 20;
 export const REVIEW_PAGE_MAX_LIMIT = 100;
 
-export const REQUIRED_SCHEMA_VERSION = 3;
+export const REQUIRED_SCHEMA_VERSION = 5;

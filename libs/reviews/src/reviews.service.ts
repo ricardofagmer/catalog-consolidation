@@ -134,9 +134,6 @@ export class ReviewsService {
       sellerName: record.item.sellerName,
       sellerProductId: record.item.sellerProductId,
       productId: target.productId,
-      sourceName: record.sourceName,
-      sourceBrand: record.sourceBrand,
-      sourceCategory: record.sourceCategory,
       matchType: target.matchType,
     });
   }

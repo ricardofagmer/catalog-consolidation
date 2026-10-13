@@ -21,14 +21,14 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd -P)
 cd "$ROOT"
 
 readonly FIXTURES=fixtures/golden
-readonly SOURCE_DB=data/catalog.db
+readonly SOURCE_DB=fixtures/source/catalog.db
 readonly SOURCE_INPUT=data/ProductEntry.json
 # argparse wraps help at the terminal width; pin it so recording and checking see the same width.
 readonly HELP_COLUMNS=80
 
 readonly DUMP_PRODUCT='SELECT Id, Name, Brand, Category, NormalizedName, NormalizedBrand FROM Product ORDER BY Id'
-readonly DUMP_SELLER_PRODUCT='SELECT Id, SellerName, ProductId, SellerProductId, SourceName, SourceBrand, SourceCategory, MatchType FROM SellerProduct ORDER BY Id'
-readonly DUMP_REVIEW='SELECT Id, SellerName, SellerProductId, SourceName, SourceBrand, SourceCategory, CandidateProductId, Score, Reason, Status FROM ProductMatchReview ORDER BY Id'
+readonly DUMP_SELLER_PRODUCT='SELECT sp.Id, s.Name AS SellerName, sp.ProductId, sp.SellerProductId, sp.MatchType FROM SellerProduct sp JOIN Seller s ON s.Id = sp.SellerId ORDER BY sp.Id'
+readonly DUMP_REVIEW='SELECT r.Id, s.Name AS SellerName, r.SellerProductId, r.SourceName, r.SourceBrand, r.SourceCategory, r.CandidateProductId, r.Score, r.Reason, r.Status FROM ProductMatchReview r JOIN Seller s ON s.Id = r.SellerId ORDER BY r.Id'
 readonly DUMP_SEQUENCE='SELECT name, seq FROM sqlite_sequence ORDER BY name'
 readonly SELECT_SCHEMA_VERSION='SELECT Version, Name, Checksum FROM SchemaVersion ORDER BY Version'
 readonly SELECT_NORMALIZED='SELECT Id, NormalizedName, NormalizedBrand FROM Product ORDER BY Id'

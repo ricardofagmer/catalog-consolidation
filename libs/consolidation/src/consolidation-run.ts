@@ -119,6 +119,8 @@ export class ConsolidationRun {
     if (normalizedName === null) {
       return outcomeFor(item, { outcome: "REJECTED_INVALID", errors: [UNNORMALIZABLE_NAME_ERROR] });
     }
+    // Every valid seller is registered, even when its entries only resolve to existing links.
+    this.catalog.registerSeller({ sellerName: item.sellerName });
     const query: MatchQuery = {
       rawName: item.name,
       normalizedName,

@@ -1,2 +1,2 @@
-error: database: schema_outdated: schema version 0 < required 3; run: <prog> migrate --db <work>/data/catalog.db
+error: database: schema_outdated: schema version 0 < required 5; run: <prog> migrate --db <work>/data/catalog.db
 {"timestamp":"<timestamp>","level":"error","service":"catalog_consolidation","event":"consolidate.failed","correlationId":"<id>","errorType":"DatabaseFileError","durationMs":"<ms>"}

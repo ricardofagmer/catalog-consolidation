@@ -55,7 +55,7 @@ export default async function ReviewsPage({
       <Pagination
         basePath="/reviews"
         params={paginationParams(params)}
-        nextAfterId={page.nextCursor}
+        nextCursor={page.nextCursor}
         isFirstPage={params.afterId === 0}
       />
       <footer className="mt-8 border-t pt-3 text-sm text-muted-foreground">

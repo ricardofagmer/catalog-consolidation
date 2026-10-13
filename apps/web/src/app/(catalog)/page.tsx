@@ -9,7 +9,7 @@ import { SummaryTiles } from "../../components/SummaryTiles";
 import { EmptyState } from "../../components/states/empty-state";
 import { Button } from "../../components/ui/button";
 import { getSummary, listProducts } from "../../lib/catalog-api";
-import { parseCatalogSearchParams, type CatalogSearchParams, type RawSearchParams } from "../../lib/search-params";
+import { catalogViewParams, parseCatalogSearchParams, type RawSearchParams } from "../../lib/search-params";
 
 // Every request reads the live catalog through the API; nothing may be read at build time.
 export const dynamic = "force-dynamic";
@@ -24,9 +24,15 @@ export default async function CatalogPage(props: {
   // Independent reads, so they go to the API concurrently.
   const [counts, page] = await Promise.all([
     getSummary(),
-    listProducts({ afterId: search.afterId, limit: search.limit, query: search.query }),
+    listProducts({
+      sort: search.sort,
+      order: search.order,
+      offset: search.offset,
+      limit: search.limit,
+      query: search.query,
+    }),
   ]);
-  const isFirstPage = search.afterId === 0;
+  const isFirstPage = search.offset === 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -39,12 +45,13 @@ export default async function CatalogPage(props: {
       {page.items.length === 0 ? (
         <EmptyProducts query={search.query} isFirstPage={isFirstPage} />
       ) : (
-        <ProductsTable rows={page.items} caption={tableCaption(search.query)} />
+        <ProductsTable rows={page.items} caption={tableCaption(search.query)} view={search} />
       )}
       <Pagination
         basePath="/"
-        params={paginationParams(search)}
-        nextAfterId={page.nextCursor}
+        params={catalogViewParams(search)}
+        cursorParam="offset"
+        nextCursor={page.nextOffset}
         isFirstPage={isFirstPage}
       />
     </div>
@@ -88,16 +95,4 @@ function EmptyProducts({
 
 function tableCaption(query: string | null): string {
   return query === null ? "Products" : `Products matching “${query}”`;
-}
-
-// Only non-default values are carried, so the next-page URL stays as short as the one the user typed.
-function paginationParams(search: CatalogSearchParams): Record<string, string> {
-  const params: Record<string, string> = {};
-  if (search.query !== null) {
-    params.q = search.query;
-  }
-  if (search.limit !== null) {
-    params.limit = String(search.limit);
-  }
-  return params;
 }

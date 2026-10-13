@@ -1,3 +1,5 @@
 [{"Version":1,"Name":"seller_product_text_id","Checksum":"bd80f997b13b68f7f3e9cb944f1b19a952916aae57570a32399e6c7868012c9d"},
 {"Version":2,"Name":"product_match_keys","Checksum":"85eaf1f2286463df792c103cc2f3f07aa8000b34dda69913fd01f0de99345018"},
-{"Version":3,"Name":"review_queue","Checksum":"f62565ea3185514d06c73db5e2955c52bba6aded2c6776cb73a2b4b42b7719fb"}]
+{"Version":3,"Name":"review_queue","Checksum":"f62565ea3185514d06c73db5e2955c52bba6aded2c6776cb73a2b4b42b7719fb"},
+{"Version":4,"Name":"seller_table","Checksum":"72eb5775cecf4b236939704accb7d80219572b232aa9e7b8f8352abf1b766832"},
+{"Version":5,"Name":"seller_product_drop_source_columns","Checksum":"0c40e050f62fe1056b464ec2c1aa09716e431c5fe739b6f014fa27bd98770801"}]

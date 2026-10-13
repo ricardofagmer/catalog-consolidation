@@ -19,6 +19,14 @@ export const REVIEW_RESOLUTION_ERROR_CODES = [
 ] as const;
 export type ReviewResolutionErrorCode = (typeof REVIEW_RESOLUTION_ERROR_CODES)[number];
 
+export const SELLER_LINK_ERROR_CODES = [
+  "product_not_found",
+  "seller_link_not_found",
+  "seller_sku_already_linked",
+  "seller_already_linked_to_product",
+] as const;
+export type SellerLinkErrorCode = (typeof SELLER_LINK_ERROR_CODES)[number];
+
 // `detail` never carries seller-supplied text: paths, sizes, versions, ids and statuses only.
 
 /** Base of every expected, typed failure. */
@@ -73,6 +81,19 @@ export class ReviewResolutionError extends DomainError {
   constructor(args: { readonly code: ReviewResolutionErrorCode; readonly detail: string }) {
     super(`${args.code}: ${args.detail}`);
     this.name = "ReviewResolutionError";
+    this.code = args.code;
+    this.detail = args.detail;
+  }
+}
+
+/** A manual seller-link change the catalog does not allow; nothing was written. */
+export class SellerLinkError extends DomainError {
+  readonly code: SellerLinkErrorCode;
+  readonly detail: string;
+
+  constructor(args: { readonly code: SellerLinkErrorCode; readonly detail: string }) {
+    super(`${args.code}: ${args.detail}`);
+    this.name = "SellerLinkError";
     this.code = args.code;
     this.detail = args.detail;
   }

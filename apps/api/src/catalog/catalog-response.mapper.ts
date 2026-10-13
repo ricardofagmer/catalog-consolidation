@@ -1,7 +1,17 @@
-import type { ProductListRow, ProductPage, SellerLinkRow, SummaryCounts } from "@catalog/persistence";
+import type {
+  ProductListRow,
+  ProductPage,
+  SellerLinkListPage,
+  SellerLinkListRow,
+  SellerLinkRow,
+  SellerRow,
+  SummaryCounts,
+} from "@catalog/persistence";
 import type { ProductWithOffers } from "./catalog.service.js";
 import { ProductDetailDto, SellerOfferDto, SellerOfferPageDto } from "./dto/product-detail.dto.js";
 import { ProductListItemDto, ProductPageDto } from "./dto/product-page.dto.js";
+import { SellerLinkListItemDto, SellerLinkListPageDto } from "./dto/seller-link-list.dto.js";
+import { SellerDto, SellerListDto } from "./dto/seller-list.dto.js";
 import { SummaryDto } from "./dto/summary.dto.js";
 
 export function toSummaryDto(counts: SummaryCounts): SummaryDto {
@@ -12,8 +22,31 @@ export function toSummaryDto(counts: SummaryCounts): SummaryDto {
   });
 }
 
+export function toSellerListDto(rows: readonly SellerRow[]): SellerListDto {
+  return new SellerListDto({ items: rows.map((row) => new SellerDto({ id: row.id, name: row.name })) });
+}
+
 export function toProductPageDto(page: ProductPage): ProductPageDto {
-  return new ProductPageDto({ items: page.rows.map(toProductListItemDto), nextCursor: page.nextAfterId });
+  return new ProductPageDto({
+    items: page.rows.map(toProductListItemDto),
+    nextCursor: page.nextAfterId,
+    nextOffset: page.nextOffset,
+  });
+}
+
+export function toSellerLinkListPageDto(page: SellerLinkListPage): SellerLinkListPageDto {
+  return new SellerLinkListPageDto({ items: page.rows.map(toSellerLinkListItemDto), nextCursor: page.nextAfterId });
+}
+
+function toSellerLinkListItemDto(row: SellerLinkListRow): SellerLinkListItemDto {
+  return new SellerLinkListItemDto({
+    id: row.id,
+    productId: row.productId,
+    productName: row.productName,
+    sellerName: row.sellerName,
+    sellerProductId: row.sellerProductId,
+    matchType: row.matchType,
+  });
 }
 
 export function toProductDetailDto(view: ProductWithOffers): ProductDetailDto {
@@ -35,18 +68,15 @@ function toProductListItemDto(row: ProductListRow): ProductListItemDto {
     name: row.name,
     brand: row.brand,
     category: row.category,
-    sellerCount: row.sellerCount,
+    sellerNames: row.sellerNames,
   });
 }
 
-function toSellerOfferDto(row: SellerLinkRow): SellerOfferDto {
+export function toSellerOfferDto(row: SellerLinkRow): SellerOfferDto {
   return new SellerOfferDto({
     id: row.id,
     sellerName: row.sellerName,
     sellerProductId: row.sellerProductId,
-    sourceName: row.sourceName,
-    sourceBrand: row.sourceBrand,
-    sourceCategory: row.sourceCategory,
     matchType: row.matchType,
   });
 }

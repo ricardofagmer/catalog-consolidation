@@ -21,9 +21,11 @@ import {
 // The list use case asks for one look-ahead row past its largest page; nothing more.
 const MAX_REVIEW_FETCH = REVIEW_PAGE_MAX_LIMIT + 1;
 
-const SELECT_REVIEWS_BY_STATUS = `SELECT Id, SellerName, SellerProductId, CandidateProductId, Score, Reason, Status, SourceName, SourceBrand, SourceCategory FROM ProductMatchReview WHERE Status = ? AND Id > ? ORDER BY Id LIMIT ?`;
+const REVIEW_COLUMNS = `r.Id, s.Name AS SellerName, r.SellerProductId, r.CandidateProductId, r.Score, r.Reason, r.Status, r.SourceName, r.SourceBrand, r.SourceCategory`;
 
-const SELECT_REVIEW_BY_ID = `SELECT Id, SellerName, SellerProductId, CandidateProductId, Score, Reason, Status, SourceName, SourceBrand, SourceCategory FROM ProductMatchReview WHERE Id = ?`;
+const SELECT_REVIEWS_BY_STATUS = `SELECT ${REVIEW_COLUMNS} FROM ProductMatchReview r JOIN Seller s ON s.Id = r.SellerId WHERE r.Status = ? AND r.Id > ? ORDER BY r.Id LIMIT ?`;
+
+const SELECT_REVIEW_BY_ID = `SELECT ${REVIEW_COLUMNS} FROM ProductMatchReview r JOIN Seller s ON s.Id = r.SellerId WHERE r.Id = ?`;
 
 const SELECT_PRODUCT_EXISTS = `SELECT 1 FROM Product WHERE Id = ?`;
 

@@ -3,7 +3,11 @@ import {
   CatalogReadModel,
   type ProductDetail,
   type ProductPage,
+  type ProductSortField,
+  type SellerLinkListPage,
   type SellerLinkPage,
+  type SellerRow,
+  type SortOrder,
   type SummaryCounts,
 } from "@catalog/persistence";
 import { DatabaseAccess } from "../database/index.js";
@@ -13,6 +17,14 @@ export interface ProductSearch {
   readonly afterId: number;
   readonly limit: number;
   readonly query: string | null;
+  readonly sort: ProductSortField;
+  readonly order: SortOrder;
+  readonly offset: number;
+}
+
+export interface SellerLinkListing {
+  readonly afterId: number;
+  readonly limit: number;
 }
 
 export interface ProductWithOffers {
@@ -32,8 +44,16 @@ export class CatalogService {
     return this.database.read((connection) => this.readModel.summary({ connection }));
   }
 
+  listSellers(): readonly SellerRow[] {
+    return this.database.read((connection) => this.readModel.listSellers({ connection }));
+  }
+
   listProducts(search: ProductSearch): ProductPage {
     return this.database.read((connection) => this.readModel.listProducts({ connection, ...search }));
+  }
+
+  listSellerLinks(listing: SellerLinkListing): SellerLinkListPage {
+    return this.database.read((connection) => this.readModel.listSellerLinkPage({ connection, ...listing }));
   }
 
   productWithOffers(productId: number): ProductWithOffers {

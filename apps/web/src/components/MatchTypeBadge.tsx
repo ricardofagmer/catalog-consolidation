@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { MatchType } from "@catalog/api-client";
-import { Badge, type BadgeProps } from "../../../components/ui/badge";
-import { cn } from "../../../lib/utils";
+import { cn } from "../lib/utils";
+import { Badge, type BadgeProps } from "./ui/badge";
 
 // Automatic matches read as success (EXACT strongest); human or creation outcomes stay neutral.
 // Outline success keeps success text on the card surface, a contrast-checked pair.

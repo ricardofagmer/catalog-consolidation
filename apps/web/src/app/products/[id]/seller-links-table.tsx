@@ -1,19 +1,21 @@
 import type { ReactNode } from "react";
 import type { SellerOffer } from "@catalog/api-client";
 import { TableRegion } from "../../../components/shell/table-region";
-import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
-import { MatchTypeBadge } from "./match-type-badge";
-import { MissingValue } from "./missing-value";
+import { TableBody, TableCaption, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
+import { SellerLinkRow } from "./seller-link-row";
 
-// Seller and catalog text is shown exactly as stored: an inner double space is the evidence of
-// why a NORMALIZED match was needed, so HTML whitespace collapsing must not hide it.
-const TEXT_CELL_CLASS_NAME = "whitespace-pre-wrap";
 const CAPTION_ID = "seller-links-caption";
-// The primitive's muted hover would put muted-foreground text on a muted surface; background
-// keeps every text pair in the contrast-checked set (C-THEME).
-const ROW_CLASS_NAME = "hover:bg-background";
 
-export function SellerLinksTable({ rows }: { readonly rows: readonly SellerOffer[] }): ReactNode {
+export function SellerLinksTable({
+  productId,
+  rows,
+  sellerNames,
+}: {
+  readonly productId: number;
+  readonly rows: readonly SellerOffer[];
+  readonly sellerNames: readonly string[];
+}): ReactNode {
+  const linkedSellerNames = rows.map((row) => row.sellerName);
   return (
     <TableRegion labelledBy={CAPTION_ID}>
       <table className="w-full caption-top border-collapse text-sm">
@@ -24,24 +26,23 @@ export function SellerLinksTable({ rows }: { readonly rows: readonly SellerOffer
           <TableRow className="hover:bg-transparent">
             <TableHead scope="col">SellerName</TableHead>
             <TableHead scope="col">SellerProductId</TableHead>
-            <TableHead scope="col">SourceName</TableHead>
-            <TableHead scope="col">SourceBrand</TableHead>
-            <TableHead scope="col">SourceCategory</TableHead>
             <TableHead scope="col">MatchType</TableHead>
+            <TableHead scope="col" className="text-right">
+              Actions
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.id} className={ROW_CLASS_NAME}>
-              <TableCell className={`${TEXT_CELL_CLASS_NAME} font-medium`}>{row.sellerName}</TableCell>
-              <TableCell className={`${TEXT_CELL_CLASS_NAME} font-mono`}>{row.sellerProductId}</TableCell>
-              <TableCell className={`${TEXT_CELL_CLASS_NAME} min-w-48`}>{row.sourceName}</TableCell>
-              <TableCell className={TEXT_CELL_CLASS_NAME}>{row.sourceBrand ?? <MissingValue />}</TableCell>
-              <TableCell className={TEXT_CELL_CLASS_NAME}>{row.sourceCategory ?? <MissingValue />}</TableCell>
-              <TableCell>
-                <MatchTypeBadge matchType={row.matchType} />
-              </TableCell>
-            </TableRow>
+            // Keyed by the stored values: a saved edit changes the key, which remounts the row in
+            // view mode instead of leaving it open on the old inputs.
+            <SellerLinkRow
+              key={`${String(row.id)}:${row.sellerName}:${row.sellerProductId}`}
+              productId={productId}
+              row={row}
+              sellerNames={sellerNames}
+              linkedSellerNames={linkedSellerNames}
+            />
           ))}
         </TableBody>
       </table>

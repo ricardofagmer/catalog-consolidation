@@ -4,6 +4,7 @@ import { CatalogReadModel } from "./catalog-read-model.js";
 import { JsonEntryReaderFactory } from "./json-entry-reader.js";
 import { PythonFormat } from "./python-format.js";
 import { ReportWriter } from "./report-writer.js";
+import { SellerLinkWriter } from "./seller-link-writer.js";
 import { SqliteConnectionFactory } from "./sqlite-connection.factory.js";
 import { SqliteMigrationRunner } from "./sqlite-migrations.js";
 import { ReviewUnitOfWorkFactory, UnitOfWorkFactory } from "./unit-of-work.factory.js";
@@ -17,6 +18,7 @@ const PERSISTENCE_PROVIDERS = [
   ReportWriter,
   PythonFormat,
   CatalogReadModel,
+  SellerLinkWriter,
 ];
 
 @Module({

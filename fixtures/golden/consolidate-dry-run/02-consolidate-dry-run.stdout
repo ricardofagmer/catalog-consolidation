@@ -1,4 +1,4 @@
-run <run> input=data/ProductEntry.json dry_run=true committed=false rows_written=258
+run <run> input=data/ProductEntry.json dry_run=true committed=false rows_written=278
 LINKED_EXACT                 200
 LINKED_NORMALIZED             54
 CREATED                        1

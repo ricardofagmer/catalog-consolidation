@@ -11,7 +11,8 @@
     "typecheck": "nx run-many -t typecheck",
     "cli": "node apps/cli/dist/main.js",
     "parity": "scripts/parity-check.sh",
-    "dev": "nx run-many -t serve dev --parallel=2"
+    "dev": "nx run-many -t serve dev --parallel=2",
+    "start:all": "CATALOG_DB_PATH=\"${CATALOG_DB_PATH:-$PWD/out/dev/catalog.db}\" API_BASE_URL=\"${API_BASE_URL:-http://127.0.0.1:3001}\" nx run-many -t serve dev --parallel=2"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

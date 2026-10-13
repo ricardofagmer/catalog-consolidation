@@ -43,23 +43,30 @@ WHERE NormalizedName IS NOT NULL AND (? IS NULL OR NormalizedBrand IS NULL OR No
   AND Id > ?
 ORDER BY Id LIMIT ?`;
 
-const SELECT_LINK_BY_SKU = `SELECT Id, SellerName, SellerProductId, ProductId, MatchType FROM SellerProduct
-WHERE SellerName = ? AND SellerProductId = ?`;
+const SELECT_LINK_BY_SKU = `SELECT sp.Id, s.Name AS SellerName, sp.SellerProductId, sp.ProductId, sp.MatchType
+FROM SellerProduct sp JOIN Seller s ON s.Id = sp.SellerId
+WHERE s.Name = ? AND sp.SellerProductId = ?`;
 
-const SELECT_LINK_BY_SELLER_PRODUCT = `SELECT Id, SellerName, SellerProductId, ProductId, MatchType FROM SellerProduct
-WHERE SellerName = ? AND ProductId = ?`;
+const SELECT_LINK_BY_SELLER_PRODUCT = `SELECT sp.Id, s.Name AS SellerName, sp.SellerProductId, sp.ProductId, sp.MatchType
+FROM SellerProduct sp JOIN Seller s ON s.Id = sp.SellerId
+WHERE s.Name = ? AND sp.ProductId = ?`;
 
-const SELECT_REVIEW_BY_SKU = `SELECT Id, SellerName, SellerProductId, CandidateProductId, Score, Reason, Status
-FROM ProductMatchReview WHERE SellerName = ? AND SellerProductId = ?`;
+const SELECT_REVIEW_BY_SKU = `SELECT r.Id, s.Name AS SellerName, r.SellerProductId, r.CandidateProductId, r.Score, r.Reason, r.Status
+FROM ProductMatchReview r JOIN Seller s ON s.Id = r.SellerId
+WHERE s.Name = ? AND r.SellerProductId = ?`;
+
+const INSERT_SELLER = `INSERT INTO Seller (Name) VALUES (?)`;
+
+const SELECT_SELLER_ID = `SELECT Id FROM Seller WHERE Name = ?`;
 
 const INSERT_PRODUCT = `INSERT INTO Product (Name, Brand, Category, NormalizedName, NormalizedBrand) VALUES (?, ?, ?, ?, ?)`;
 
 const INSERT_LINK = `INSERT INTO SellerProduct
-  (SellerName, ProductId, SellerProductId, SourceName, SourceBrand, SourceCategory, MatchType)
-VALUES (?, ?, ?, ?, ?, ?, ?)`;
+  (SellerId, ProductId, SellerProductId, MatchType)
+VALUES (?, ?, ?, ?)`;
 
 const INSERT_REVIEW = `INSERT INTO ProductMatchReview
-  (SellerName, SellerProductId, SourceName, SourceBrand, SourceCategory, CandidateProductId, Score, Reason)
+  (SellerId, SellerProductId, SourceName, SourceBrand, SourceCategory, CandidateProductId, Score, Reason)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
 const SELECT_MISSING_MATCH_KEYS_BATCH = `SELECT Id, Name, Brand FROM Product WHERE NormalizedName IS NULL AND Id > ? ORDER BY Id LIMIT ?`;
@@ -75,6 +82,8 @@ export class SqliteCatalogRepository implements CatalogRepository {
   private readonly selectLinkBySku: StatementSync;
   private readonly selectLinkBySellerProduct: StatementSync;
   private readonly selectReviewBySku: StatementSync;
+  private readonly insertSellerStatement: StatementSync;
+  private readonly selectSellerId: StatementSync;
   private readonly insertProductStatement: StatementSync;
   private readonly insertLinkStatement: StatementSync;
   private readonly insertReviewStatement: StatementSync;
@@ -88,6 +97,8 @@ export class SqliteCatalogRepository implements CatalogRepository {
     this.selectLinkBySku = connection.prepare(SELECT_LINK_BY_SKU);
     this.selectLinkBySellerProduct = connection.prepare(SELECT_LINK_BY_SELLER_PRODUCT);
     this.selectReviewBySku = connection.prepare(SELECT_REVIEW_BY_SKU);
+    this.insertSellerStatement = connection.prepare(INSERT_SELLER);
+    this.selectSellerId = connection.prepare(SELECT_SELLER_ID);
     this.insertProductStatement = connection.prepare(INSERT_PRODUCT);
     this.insertLinkStatement = connection.prepare(INSERT_LINK);
     this.insertReviewStatement = connection.prepare(INSERT_REVIEW);
@@ -144,6 +155,17 @@ export class SqliteCatalogRepository implements CatalogRepository {
     return value === undefined ? null : toReviewItem(asRow(value));
   }
 
+  registerSeller(args: { sellerName: string }): number {
+    const name = bindText(args.sellerName);
+    // Look up first: an INSERT that conflicts still burns an AUTOINCREMENT id, and a re-run must
+    // register nothing and write 0 rows.
+    const existing = this.selectSellerId.get(name);
+    if (existing !== undefined) {
+      return readInteger(asRow(existing), "Id");
+    }
+    return toRowId(this.insertSellerStatement.run(name).lastInsertRowid);
+  }
+
   insertProduct(product: NewProduct): number {
     const result = this.insertProductStatement.run(
       bindText(product.name),
@@ -157,12 +179,9 @@ export class SqliteCatalogRepository implements CatalogRepository {
 
   insertLink(link: NewSellerLink): number {
     const result = this.insertLinkStatement.run(
-      bindText(link.sellerName),
+      this.registerSeller({ sellerName: link.sellerName }),
       link.productId,
       bindText(link.sellerProductId),
-      bindText(link.sourceName),
-      bindOptionalText(link.sourceBrand),
-      bindOptionalText(link.sourceCategory),
       bindText(link.matchType),
     );
     return toRowId(result.lastInsertRowid);
@@ -170,7 +189,7 @@ export class SqliteCatalogRepository implements CatalogRepository {
 
   enqueueReview(review: NewReviewItem): number {
     const result = this.insertReviewStatement.run(
-      bindText(review.sellerName),
+      this.registerSeller({ sellerName: review.sellerName }),
       bindText(review.sellerProductId),
       bindText(review.sourceName),
       bindOptionalText(review.sourceBrand),

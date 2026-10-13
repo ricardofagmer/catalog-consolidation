@@ -10,7 +10,7 @@ A product in the marketplace's own catalog. Sellers never overwrite it.
 _Avoid_: Item, SKU, listing
 
 **Seller**:
-A store that offers products on the marketplace, identified by its name.
+A store that offers products on the marketplace, identified by its name and registered once in the `Seller` table.
 _Avoid_: Vendor, merchant, store
 
 **Seller Entry**:
