@@ -30,9 +30,11 @@ Pre-implementation: profiling on data/catalog.db and the planned UPDATEs run on 
 Final validation: pending.
 
 ## Human decisions
-- 2026-10-13 | Ricardo Fagmer | scope | approved | option 1: canonicalize brand spellings via migration (not category in identity)
-- 2026-10-13 | Ricardo Fagmer | spelling | approved | `simplehuman` + `BLACK+DECKER` (official stylizations)
-- 2026-10-13 | Ricardo Fagmer | preview-approved | approved | LOGIC prototype rev 3ae828afc37e, local pointer docs/specs/canonical-brand-spelling/PROTOTYPE-preview.html (not committed; git capture not authorized); scope: migration only, lasting consolidation fix declined
+<!-- risk low: hitl.required did not fire; entries below are user scope decisions (reason n/a), not hitl gates -->
+- 2026-10-13 | Ricardo Fagmer | n/a (scope) | approved | option 1: canonicalize brand spellings via migration (not category in identity)
+- 2026-10-13 | Ricardo Fagmer | n/a (spelling) | approved | `simplehuman` + `BLACK+DECKER` (official stylizations)
+- 2026-10-13 | Ricardo Fagmer | n/a (preview-approved) | approved | LOGIC prototype rev 3ae828afc37e, local pointer docs/specs/canonical-brand-spelling/PROTOTYPE-preview.html (not committed; git capture not authorized); scope: migration only, lasting consolidation fix declined
+- 2026-10-13 | Ricardo Fagmer | n/a (golden rebaseline) | approved | the approved scope included updating the golden fixtures the migration changes (ADR 2026-10-06-remove-python-golden-fixtures); verified by ticket 02
 
 ## Changes registered
 <filled on completion>

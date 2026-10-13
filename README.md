@@ -313,7 +313,7 @@ applied migration with a SHA-256 checksum. Editing an applied migration file fai
 | `0003_review_queue` | Creates `ProductMatchReview` (candidate, score, reason `FUZZY`/`AMBIGUOUS`, status `PENDING`/`LINKED`/`CREATED`/`REJECTED`), unique per seller SKU. |
 | `0004_seller_table` | Creates `Seller` (`Id`, unique `Name`), backfilled from existing links and reviews. `SellerProduct` and `ProductMatchReview` swap `SellerName` for a `SellerId` foreign key; `SellerProduct` is the N:N link between `Seller` and `Product`. |
 | `0005_seller_product_drop_source_columns` | Drops `SourceName`, `SourceBrand` and `SourceCategory` from `SellerProduct`: they duplicated `Product`. `ProductMatchReview` keeps them. |
-| `0006_canonical_brand_spelling` | Data only: sets the display `Product.Brand` to the brands' own spelling where one normalized brand had two (`Simplehuman` -> `simplehuman`, `Black+Decker` -> `BLACK+DECKER`; Ids 458, 460, 607). Match keys are unchanged. The manual undo is in the file header. |
+| `0006_canonical_brand_spelling` | Data only: sets the display `Product.Brand` to the brand's own spelling for every product whose normalized brand is `simplehuman` or `black decker` (`simplehuman`, `BLACK+DECKER`). Match keys are unchanged. Like the others it has no down path; restore the `.bak` to undo it. |
 
 There are no down migrations. Recovery is the `.bak` file that `migrate` writes first.
 

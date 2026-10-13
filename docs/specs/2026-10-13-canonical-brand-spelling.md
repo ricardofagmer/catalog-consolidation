@@ -48,8 +48,9 @@ Migration `0006_canonical_brand_spelling.sql`, applied by the existing runner
 - `UPDATE Product SET Brand = 'simplehuman' WHERE NormalizedBrand = 'simplehuman' AND Brand <> 'simplehuman'`
 - `UPDATE Product SET Brand = 'BLACK+DECKER' WHERE NormalizedBrand = 'black decker' AND Brand <> 'BLACK+DECKER'`
 - `NormalizedName`/`NormalizedBrand` are not touched (the spelling change leaves the keys equal).
-- Down path, documented in the file header (migrations are forward-only):
-  `UPDATE Product SET Brand = 'Simplehuman' WHERE Id IN (458, 460); UPDATE Product SET Brand = 'Black+Decker' WHERE Id = 607;`
+- Recovery (migrations are forward-only): the `<db>.pre-migrate-<timestamp>.bak` that `migrate`
+  writes before applying. For the provided data only, the header also names the 3 rows changed
+  (Ids 458, 460 -> `Simplehuman`; 607 -> `Black+Decker`) so they can be restored by hand.
 
 ## Acceptance criteria
 
