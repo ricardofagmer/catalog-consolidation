@@ -1,1 +1,1 @@
-{"timestamp":"<timestamp>","level":"info","service":"catalog_consolidation","event":"migrate.finished","correlationId":"<id>","durationMs":"<ms>","schemaVersion":5,"appliedCount":5}
+{"timestamp":"<timestamp>","level":"info","service":"catalog_consolidation","event":"migrate.finished","correlationId":"<id>","durationMs":"<ms>","schemaVersion":6,"appliedCount":6}
